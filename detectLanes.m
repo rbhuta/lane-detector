@@ -1,4 +1,4 @@
-function [detected_lanes] = detectLanes(img_path,horizon)
+function [detected_lanes] = detectLanes(img_path,horizon, width)
 
 % Load in image
 imFile = fullfile(img_path);
@@ -11,14 +11,12 @@ img_gray = rgb2gray(img);
 img_med = medfilt2(img_gray,[5,5]);
 
 % Tophat filtering
-%img_top = imtophat(img_med,strel('rectangle',[10,69]));
-
-slope = -0.0856;
+slope = -width / (1024 - horizon);
 i = 1024;
 j = 1;
 
 while i > horizon
-    img_top(i,:) = imtophat(img_med(i,:),strel('rectangle',[1,round(69+slope*j)]));
+    img_top(i,:) = imtophat(img_med(i,:),strel('rectangle',[1,round(70+slope*j)]));
     i = i - 1;
     j = j + 1;
 end
