@@ -22,7 +22,8 @@ while i > horizon
 end
 
 % Binarize and cut off above horizon
-detected_lanes = imbinarize(img_top,0.35);
+detected_lanes = (img_top) > (0.35*255);
+detected_lanes = img_top & detected_lanes;
 detected_lanes(1:horizon,:) = 0;
 
 end
