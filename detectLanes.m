@@ -7,8 +7,15 @@ img = imread(imFile);
 % Convert to grayscale
 img_gray = rgb2gray(img);
 
-% Basic filtering of image
-img_med = medfilt2(img_gray,[5,5]);
+% Set Filter Size
+filterSize = [5 5];
+
+% Using Integral Image for Box Avg Filter
+padSize = (filterSize-1)/2;
+Apad = padarray(img_gray, padSize, 'replicate','both');
+intA = integralImage(Apad);
+int_img = integralBoxFilter(intA, filterSize);
+img_int = uint8(int_img);
 
 % Tophat filtering
 slope = -width / (1024 - horizon);
@@ -16,7 +23,7 @@ i = 1024;
 j = 1;
 
 while i > horizon
-    img_top(i,:) = imtophat(img_med(i,:),strel('rectangle',[1,round(70+slope*j)]));
+    img_top(i,:) = imtophat(img_int(i,:),strel('rectangle',[1,round(70+slope*j)+1]));
     i = i - 1;
     j = j + 1;
 end
