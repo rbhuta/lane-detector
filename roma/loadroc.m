@@ -20,9 +20,9 @@ lname=sprintf('%s/%s.mov',sequence, imagelist);
 for i = 1:num;
 	filename = sprintf('%s/%s/%s_%s.txt',sequence,situation,algoname,char(names(i)));
 	data = load(filename);   
-    	TP = [ TP; data(:,2)' ];
-    	FP = [ FP; data(:,3)'];
-    	TN = [ TN; data(:,4)' ];
-    	FN = [ FN; data(:,5)'];
+    	TP = [ TP; data(2)' ];
+    	FP = [ FP; data(3)'];
+    	TN = [ TN; data(4)' ];
+    	FN = [ FN; data(5)'];
 	values= data(:,1)';
 end
