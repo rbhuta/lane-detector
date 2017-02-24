@@ -16,14 +16,14 @@
 function [TP,FP,TN,FN,values]=loadroc(sequence,situation,imagelist,algoname,TP,FP,TN,FN)
 
 values=[];
-lname=sprintf('%s/%s.mov',sequence, imagelist);
+lname=sprintf('%s/%s.mov',sequence, imagelist)
 [names,num]=loadlist(lname);
 for i = 1:num;
-	filename = sprintf('%s/%s/%s_%s.txt',sequence,situation,algoname,char(names(i)));
-	data = load(filename);   
-    	TP = [ TP; data(:,2)' ];
-    	FP = [ FP; data(:,3)'];
-    	TN = [ TN; data(:,4)' ];
-    	FN = [ FN; data(:,5)'];
+	filename = sprintf('%s/%s/%s_%s.txt',sequence,situation,algoname,char(names(i)))
+	data = load(filename) 
+    	TP = [ TP; data(2)' ];
+    	FP = [ FP; data(3)'];
+    	TN = [ TN; data(4)' ];
+    	FN = [ FN; data(5)'];
 	values= data(:,1)';
 end
