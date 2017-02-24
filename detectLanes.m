@@ -15,12 +15,14 @@ slope = -width / (1024 - horizon);
 i = 1024;
 j = 1;
 
-while i > horizon
+while i >= horizon
     img_top(i,:) = imtophat(img_med(i,:),strel('rectangle',[1,round(70+slope*j)]));
     i = i - 1;
     j = j + 1;
 end
-
+tic
+img_top = imtophat(img_med,strel('rectangle',[10,round(70+slope*j)]));
+toc
 % Binarize and cut off above horizon
 detected_lanes = imbinarize(img_top,0.35);
 detected_lanes(1:horizon,:) = 0;
