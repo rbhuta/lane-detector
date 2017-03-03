@@ -20,9 +20,11 @@ img_int = uint8(int_img);
 % Tophat filtering 
 slope = -width / (1024 - horizon);
 
+j = 0;
 % Computing width of markers into array
 for i=size(img_int,1):-1:horizon
-    SM(i) = round(width + i*slope)+1;
+    SM(i) = round(width + j*slope)+1;
+    j = j + 1;
 end
 s = width;
 thresh = 10;
@@ -48,7 +50,7 @@ end
     
     
 % Binarize and cut off above horizon
-detected_lanes = (top_hat) > (0.35*255);
+detected_lanes = (top_hat);% > (0.35*255);
 %detected_lanes = img_top & detected_lanes;
 detected_lanes(1:horizon,:) = 0;
 figure
