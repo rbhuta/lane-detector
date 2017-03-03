@@ -17,7 +17,7 @@ intA = integralImage(Apad);
 int_img = integralBoxFilter(intA, filterSize);
 img_int = uint8(int_img);
 
-% Tophat filtering
+% Tophat filtering 
 slope = -width / (1024 - horizon);
 
 % Computing width of markers into array
