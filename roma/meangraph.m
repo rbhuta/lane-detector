@@ -21,14 +21,14 @@ FN = [];
 [TP,FP,TN,FN,values]=loadroc('LRAlargeur13032003', situation, imagelist, algoname, TP,FP,TN,FN);
 [TP,FP,TN,FN,values]=loadroc('LRAlargeur14062002', situation, imagelist, algoname, TP,FP,TN,FN);
 [TP,FP,TN,FN,values]=loadroc('LRAlargeur26032003', situation, imagelist, algoname, TP,FP,TN,FN);
-[TP,FP,TN,FN,values]=loadroc('RD116', situation, imagelist, algoname, TP,FP,TN,FN);
+%[TP,FP,TN,FN,values]=loadroc('RD116', situation, imagelist, algoname, TP,FP,TN,FN);
 [TP,FP,TN,FN,values]=loadroc('RouenN8IRC051900', situation, imagelist, algoname, TP,FP,TN,FN);
 [TP,FP,TN,FN,values]=loadroc('RouenN8IRC052310', situation, imagelist, algoname, TP,FP,TN,FN);
 
-totalTP =  sum(TP);
-totalFP =  sum(FP);
-totalTN =  sum(TN);
-totalFN =  sum(FN);
+totalTP =  (TP)';
+totalFP =  (FP)';
+totalTN =  (TN)';
+totalFN =  (FN)';
 totalN = totalTN + totalFP;
 totalP = totalTP + totalFN;
 
@@ -50,7 +50,7 @@ end
 
 % display dice max value
 [valmax,indmax]=max(totalDice);
-fprintf('algo %s: threshold value at dice max=%f, TPR at dice max=%f, dice max value=%f\n',algoname,values(indmax),totalTPR(indmax),totalDice(indmax));
+%fprintf('algo %s: threshold value at dice max=%f, TPR at dice max=%f, dice max value=%f\n',algoname,values(indmax),totalTPR(indmax),totalDice(indmax));
 
 % display dice curve
 if (dispflag==1)

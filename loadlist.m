@@ -1,4 +1,3 @@
-% Authors: ROMA 
 % this function reads a list of filenames in a given file
 % 
 % name is the filename of a list of filenames with a header (can be img.mov, imgnormal.mov, imgadvlight.mov, imghighcurv.mov)
