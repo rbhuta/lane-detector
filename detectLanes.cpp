@@ -9,10 +9,14 @@
 using namespace cv;
 using namespace std;
 
-Mat src;
-string window_name = "Top Hat Filter using Integral Image";
+/* RUN COMMAND:
+g++ `pkg-config --cflags opencv` detectLanes.cpp `pkg-config --libs opencv` -o test; ./test 
+*/
 
-/* Run with: g++ `pkg-config --cflags opencv` detectLanes.cpp `pkg-config --libs opencv` -o test; ./test */
+Mat src;
+string window_name = "Top Hat Filter";
+
+
 int main( int, char** argv )
 {
 	// Collect image and param paths
@@ -27,6 +31,8 @@ int main( int, char** argv )
 		cout << "Unable to read image" << endl;
 		return 0;
 	}
+
+
 	int horizon, lane_width;
 	double ignore;
 	ifstream param(param_path.c_str());
@@ -37,42 +43,73 @@ int main( int, char** argv )
 	double Sm_max = lane_width*2; // pixels in 10 cm
 	vector<double> SM(src.rows);
 	vector<double> Sm(src.rows);
-	for (int i = 0; i < horizon; ++i)
+	for (int i = src.rows; i > horizon; --i)
 	{
 		SM[i] = SM_max / (src.rows - horizon) * (i - horizon); 
 		Sm[i] = Sm_max / (src.rows - horizon) * (i - horizon);
 	}
 
-	vector<int> Row_Int_Image(src.cols); // Init vector length
-	Mat TopHat_Image(src.rows, src.cols, CV_32SC1); // Init Tophat image matrix
+	vector<double> Row_Int_Image(src.cols); // Init vector length
+	Mat TopHat_Image = Mat::zeros(src.rows, src.cols, CV_64FC1); // Init Tophat image matrix
 
-	for (int i = src.rows; i > horizon; --i) {
+	for (int i = src.rows - 1; i > horizon; --i) {
 		// Compute Individual Row by Row Integral Image
 		int sum = (int)src.at<uchar>(i, 0);
 		for (int j = 0; j < src.cols; ++j) {
 
 			Row_Int_Image[j] = sum;
 			sum += (int)src.at<uchar>(i,j);
+			//cout << "Row_Int_Image: " << Row_Int_Image[j] << endl;
 		}
+
 
 		// Apply TopHat Filter
 		// Why must s be odd?
-		int s = round(SM[i] + Sm[i])*(0.25);
+		//cout << "Begin row " << i << " TopHat Filter" << endl;
+		//cout << SM[i] << " " << Sm[i] << endl;
+		double s = round((SM[i] + Sm[i])*(0.25));
+		if (s == 0) { s = 1;}
 
+		//cout << "u = " << 2*s << " while u < " << src.cols - (2*s) << endl;
 		for (int u = 2*s; u < src.cols - (2*s); ++u) {
-			TopHat_Image.at<int>(i, u) = (int)((1/(4*s)) * (2*(Row_Int_Image[u+s] - Row_Int_Image[u-s]) - (Row_Int_Image[u + 2*s] - Row_Int_Image[u - 2*s])));
 
-			// cout << "Value: " << ((1/4*s) * (2*(Row_Int_Image[u+s] - Row_Int_Image[u-s]) - (Row_Int_Image[u + 2*s] - Row_Int_Image[u - 2*s]))) << endl;
+			int u_plus_s = u + s;
+			int u_minus_s = u - s;
+			int u_plus_2s = u + 2*s;
+			int u_minus_2s = u - 2*s;
+
+			// cout << "Before next value" << endl;
+			// cout << "u+s: " << u_plus_s << " -> " << Row_Int_Image[u_plus_s] << endl;
+			// cout << "u-s: " << u_minus_s << " -> " << Row_Int_Image[u_minus_s] << endl;
+			// cout << "u+2s: " << u_plus_2s << " -> " << Row_Int_Image[u_plus_2s] << endl;
+			// cout << "u-2s: " << u_minus_2s << " -> " << Row_Int_Image[u_minus_2s] << endl;
+			//cout << "u: " << u << endl;
+			// cout << "s: " << s << endl;
+			//cout << "i: " << i << endl;
+
+			// if (u == 1200) {
+			// 	for (int p = 0; p < TopHat_Image.cols; ++p) {
+			// 		cout << TopHat_Image.at<double>(i, p) << " ";
+			// 	}
+			// 	cout << endl;
+			// }
+
+			TopHat_Image.at<double>(i, u) = ((1/(4*s)) * (2*(Row_Int_Image[u_plus_s] - Row_Int_Image[u_minus_s]) - (Row_Int_Image[u_plus_2s] - Row_Int_Image[u_minus_2s])));
+
+			// cout << "Expected Value: " << ((1/(4*s)) * (2*(Row_Int_Image[u_plus_s] - Row_Int_Image[u_minus_s]) - (Row_Int_Image[u_plus_2s] - Row_Int_Image[u_minus_2s]))) << endl;
+			//cout << "Value: " << TopHat_Image.at<double>(i, u) << endl;
 		}
 	}
 
 	//Display Results
-	// Mat dst; 
-	// normalize(TopHat_Image, dst, 0, 1, NORM_MINMAX);
-	// namedWindow( window_name, WINDOW_AUTOSIZE ); // Create a window to display results
-	// imshow(window_name, dst);
-	// moveWindow(window_name, 10, 10);
-	// waitKey(0);
+	Mat dst; 
+	threshold(TopHat_Image, dst, 10, 255, THRESH_BINARY);
+	namedWindow( window_name, WINDOW_AUTOSIZE ); // Create a window to display results
+	imshow(window_name, dst);
+	moveWindow(window_name, 10, 10);
+
+	imwrite("test_result.jpg", dst);
+	waitKey(0);
 
 	return 0;
 }
