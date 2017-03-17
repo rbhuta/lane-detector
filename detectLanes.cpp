@@ -32,7 +32,6 @@ int main( int, char** argv )
 		return 0;
 	}
 
-
 	int horizon, lane_width;
 	double ignore;
 	ifstream param(param_path.c_str());
@@ -59,18 +58,13 @@ int main( int, char** argv )
 
 			Row_Int_Image[j] = sum;
 			sum += (int)src.at<uchar>(i,j);
-			//cout << "Row_Int_Image: " << Row_Int_Image[j] << endl;
 		}
-
 
 		// Apply TopHat Filter
 		// Why must s be odd?
-		//cout << "Begin row " << i << " TopHat Filter" << endl;
-		//cout << SM[i] << " " << Sm[i] << endl;
 		double s = round((SM[i] + Sm[i])*(0.25));
 		if (s == 0) { s = 1;}
 
-		//cout << "u = " << 2*s << " while u < " << src.cols - (2*s) << endl;
 		for (int u = 2*s; u < src.cols - (2*s); ++u) {
 
 			int u_plus_s = u + s;
@@ -78,26 +72,7 @@ int main( int, char** argv )
 			int u_plus_2s = u + 2*s;
 			int u_minus_2s = u - 2*s;
 
-			// cout << "Before next value" << endl;
-			// cout << "u+s: " << u_plus_s << " -> " << Row_Int_Image[u_plus_s] << endl;
-			// cout << "u-s: " << u_minus_s << " -> " << Row_Int_Image[u_minus_s] << endl;
-			// cout << "u+2s: " << u_plus_2s << " -> " << Row_Int_Image[u_plus_2s] << endl;
-			// cout << "u-2s: " << u_minus_2s << " -> " << Row_Int_Image[u_minus_2s] << endl;
-			//cout << "u: " << u << endl;
-			// cout << "s: " << s << endl;
-			//cout << "i: " << i << endl;
-
-			// if (u == 1200) {
-			// 	for (int p = 0; p < TopHat_Image.cols; ++p) {
-			// 		cout << TopHat_Image.at<double>(i, p) << " ";
-			// 	}
-			// 	cout << endl;
-			// }
-
 			TopHat_Image.at<double>(i, u) = ((1/(4*s)) * (2*(Row_Int_Image[u_plus_s] - Row_Int_Image[u_minus_s]) - (Row_Int_Image[u_plus_2s] - Row_Int_Image[u_minus_2s])));
-
-			// cout << "Expected Value: " << ((1/(4*s)) * (2*(Row_Int_Image[u_plus_s] - Row_Int_Image[u_minus_s]) - (Row_Int_Image[u_plus_2s] - Row_Int_Image[u_minus_2s]))) << endl;
-			//cout << "Value: " << TopHat_Image.at<double>(i, u) << endl;
 		}
 	}
 
