@@ -13,14 +13,14 @@ using namespace std;
 g++ `pkg-config --cflags opencv` detectLanes.cpp `pkg-config --libs opencv` -o test; ./test 
 
 TODO:
-1) add local grad
-2) add sym local grad
-4) add gui
-5) file explore via boost filesystem
-6) eigen speed up
-7) otsu method for binarization
-8) connected region threshold filter
-9) put functions into class
+- put functions into class
+- add gui
+- file explore via boost filesystem
+- eigen speed up
+------------------------------------------
+- filter by lane width
+- pre-detection gaussian/mean box filter
+- optimize otsu thresholding
 */
 
 Mat src;
@@ -95,8 +95,9 @@ int main( int, char** argv )
 
 	//Display TopHat Results
 	Mat tophat_binarized;
-	TopHat_Image.converTo(tophat_binarized,CV_8UC1);
-	threshold(TopHat_Image, tophat_binarized, 12, 255, THRESH_BINARY | THRESH_OTSU );
+	TopHat_Image.convertTo(TopHat_Image,CV_8UC1, 10);
+	double otsu_value = threshold(TopHat_Image, tophat_binarized, 12, 255, THRESH_BINARY + THRESH_OTSU );
+	//adaptiveThreshold(TopHat_Image, tophat_binarized, 255, ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 7, 15);
 	namedWindow( tophat_window, WINDOW_AUTOSIZE ); // Create a window to display results
 	imshow(tophat_window, tophat_binarized);
 	moveWindow(tophat_window, 10, 10);
@@ -112,7 +113,7 @@ int main( int, char** argv )
 	namedWindow( sym_local_grad_window, WINDOW_AUTOSIZE ); // Create a window to display results
 	imshow(sym_local_grad_window, Sym_Loc_Grad_Image);
 	moveWindow(sym_local_grad_window, 10, 10);
-	imwrite("loc_grad.jpg", Sym_Loc_Grad_Image);
+	imwrite("sym_loc_grad.jpg", Sym_Loc_Grad_Image);
 
 	waitKey(0);
 
@@ -170,15 +171,3 @@ void sym_local_gradient(vector<double>& Row_Int_Image, int row_idx, Mat& Sym_Loc
 		}
 	}
 }
-
- // % now compute Sym Local Gradient Image (on 12.SM avg size)
- //        for u = 1 : col
- //            u_right = min(u+6*s, col);
- //            du_right = u_right - u + 1;
- //            u_left = max(u-6*s, 1);
- //            du_left = u - u_left + 1;
- //            if(gray(v,u) > thresh_sym_grad + (integral_gray(v, u_right)- integral_gray(v, u))/du_right...
- //                    && gray(v,u) > thresh_grad + (integral_gray(v, u)- integral_gray(v, u_left))/du_left)
- //                sym_loc_grad(v,u) = 255;
- //            end
- //        end
