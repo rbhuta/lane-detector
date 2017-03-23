@@ -11,14 +11,25 @@ using namespace std;
 
 /* RUN COMMAND:
 g++ `pkg-config --cflags opencv` detectLanes.cpp `pkg-config --libs opencv` -o test; ./test 
+
+TODO:
+1) add local grad
+2) add sym local grad
+4) add gui
+5) file explore via boost filesystem
+6) eigen speed up
+7) otsu method for binarization
+8) connected region threshold filter
+9) put functions into class
 */
 
 Mat src;
 string window_name = "Top Hat Filter";
-
+void tophat_filter(vector<double>& Row_Int_Image, int row_idx, Mat& TopHat_Image, double s);
 
 int main( int, char** argv )
 {
+
 	// Collect image and param paths
 	string image_path = "roma/BDXD54/";
 	string param_path = "roma/BDXD54/";
@@ -61,30 +72,48 @@ int main( int, char** argv )
 		}
 
 		// Apply TopHat Filter
-		// Why must s be odd?
 		double s = round((SM[i] + Sm[i])*(0.25));
-		if (s == 0) { s = 1;}
-
-		for (int u = 2*s; u < src.cols - (2*s); ++u) {
-
-			int u_plus_s = u + s;
-			int u_minus_s = u - s;
-			int u_plus_2s = u + 2*s;
-			int u_minus_2s = u - 2*s;
-
-			TopHat_Image.at<double>(i, u) = ((1/(4*s)) * (2*(Row_Int_Image[u_plus_s] - Row_Int_Image[u_minus_s]) - (Row_Int_Image[u_plus_2s] - Row_Int_Image[u_minus_2s])));
-		}
+		if ((int)s % 2 == 0) { s += 1;} // s is always odd
+		tophat_filter(Row_Int_Image, i, TopHat_Image, s);
+		
 	}
 
 	//Display Results
 	Mat dst; 
-	threshold(TopHat_Image, dst, 10, 255, THRESH_BINARY);
+	threshold(TopHat_Image, dst, 12, 255, THRESH_BINARY );
 	namedWindow( window_name, WINDOW_AUTOSIZE ); // Create a window to display results
 	imshow(window_name, dst);
 	moveWindow(window_name, 10, 10);
 
 	imwrite("test_result.jpg", dst);
 	waitKey(0);
-
 	return 0;
+}
+
+
+ // double otsu_thresh(Mat& TopHat_Image) {
+ // 	// Compute image histogram
+ // }
+
+void tophat_filter(vector<double>& Row_Int_Image, int row_idx, Mat& TopHat_Image, double s) {
+
+	double* t;
+	for (int u = 2*s; u < src.cols - (2*s); ++u) {
+
+		int u_plus_s = u + s;
+		int u_minus_s = u - s;
+		int u_plus_2s = u + 2*s;
+		int u_minus_2s = u - 2*s;
+
+		//Use ptr
+		t = TopHat_Image.ptr<double>(row_idx);
+		t[u] = ((1/(4*s)) * (2*(Row_Int_Image[u_plus_s] - Row_Int_Image[u_minus_s]) - (Row_Int_Image[u_plus_2s] - Row_Int_Image[u_minus_2s])));
+	}
+}
+
+void local_gradient(vector<double>& Row_Int_Image, int row_idx, Mat& Loc_Grad_Image, double s) {
+
+
+
+
 }
