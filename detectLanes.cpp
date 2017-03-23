@@ -94,8 +94,9 @@ int main( int, char** argv )
 	}
 
 	//Display TopHat Results
-	Mat tophat_binarized; 
-	threshold(TopHat_Image, tophat_binarized, 12, 255, THRESH_BINARY );
+	Mat tophat_binarized;
+	TopHat_Image.converTo(tophat_binarized,CV_8UC1);
+	threshold(TopHat_Image, tophat_binarized, 12, 255, THRESH_BINARY | THRESH_OTSU );
 	namedWindow( tophat_window, WINDOW_AUTOSIZE ); // Create a window to display results
 	imshow(tophat_window, tophat_binarized);
 	moveWindow(tophat_window, 10, 10);
