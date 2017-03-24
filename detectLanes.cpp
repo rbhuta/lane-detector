@@ -18,19 +18,26 @@ TODO:
 - file explore via boost filesystem
 - eigen speed up
 ------------------------------------------
-- filter by lane width
-- pre-detection gaussian/mean box filter
+- test pre-processing gaussian & mean box filter
 - optimize otsu thresholding
+
+DONE:
+- tophat
+- loc_grad
+- sym_loc_grad
+- otsu?
 */
+
+void tophat_filter(vector<double>& Row_Int_Image, int row_idx, Mat& TopHat_Image, double s);
+void local_gradient(vector<double>& Row_Int_Image, int row_idx, Mat& Loc_Grad_Image, double s, int thresh_grad);
+void sym_local_gradient(vector<double>& Row_Int_Image, int row_idx, Mat& Sym_Loc_Grad_Image, double s, int thresh_sym_grad);
+void lane_width_filter(Mat& Image, vector<double>& Sm, vector<double>& SM, int horizon);
+
 
 Mat src;
 string tophat_window = "Top Hat Filter";
 string local_grad_window = "Local Gradient";
 string sym_local_grad_window = "Symmetric Local Gradient";
-void tophat_filter(vector<double>& Row_Int_Image, int row_idx, Mat& TopHat_Image, double s);
-void local_gradient(vector<double>& Row_Int_Image, int row_idx, Mat& Loc_Grad_Image, double s, int thresh_grad);
-void sym_local_gradient(vector<double>& Row_Int_Image, int row_idx, Mat& Sym_Loc_Grad_Image, double s, int thresh_sym_grad);
-void lane_width_filter(Mat& Image, vector<double>& Sm, vector<double>& SM, int horizon);
 
 int main( int, char** argv )
 {
@@ -47,6 +54,10 @@ int main( int, char** argv )
 		cout << "Unable to read image" << endl;
 		return 0;
 	}
+
+	// Pre processing filtering
+	blur(src, src, Size(9, 9));
+	//GaussianBlur(src, src, Size(9, 9), 0);
 
 	int horizon, lane_width;
 	double ignore;
@@ -95,6 +106,7 @@ int main( int, char** argv )
 		
 	}
 
+	//filter by lane marking width
 	lane_width_filter(Loc_Grad_Image, Sm, SM, horizon);
 	lane_width_filter(Sym_Loc_Grad_Image, Sm, SM, horizon);
 
@@ -235,38 +247,3 @@ void lane_width_filter(Mat& Image, vector<double>& Sm, vector<double>& SM, int h
 	// waitKey(0);
 	filtered_Image.copyTo(Image);
 }
-
-// function out = filter_by_RM_width(in, Sm, SM)
-
-// [lig, col, chn] = size(in);
-// out = zeros(lig, col);
-
-// for v = lig : -1 : 1
-//     if(Sm(v) < 0)
-//         break;
-//     end
-    
-//     allume = 0;
-//     count = 0;
-//     for u = 1 : col
-//         if(allume == 0)
-//             if(in(v,u) > 0)
-//                 count = count + 1;
-//                 allume = 1;
-//                 u_start = u;
-//             end
-//         else
-//             if(in(v,u) == 0)
-//                 allume = 0;
-//                 if(count >= Sm(v) && count <= SM(v));
-//                     u_end = u;
-//                     out(v,u_start:u_end) = 255;
-//                 end
-//                 count = 0;
-//             else
-//                 count = count + 1;
-//             end
-//         end
-//     end
-    
-// end
