@@ -30,6 +30,7 @@ string sym_local_grad_window = "Symmetric Local Gradient";
 void tophat_filter(vector<double>& Row_Int_Image, int row_idx, Mat& TopHat_Image, double s);
 void local_gradient(vector<double>& Row_Int_Image, int row_idx, Mat& Loc_Grad_Image, double s, int thresh_grad);
 void sym_local_gradient(vector<double>& Row_Int_Image, int row_idx, Mat& Sym_Loc_Grad_Image, double s, int thresh_sym_grad);
+void lane_width_filter(Mat& Image, vector<double>& Sm, vector<double>& SM, int horizon);
 
 int main( int, char** argv )
 {
@@ -88,31 +89,38 @@ int main( int, char** argv )
 		tophat_filter(Row_Int_Image, i, TopHat_Image, s);
 
 		local_gradient(Row_Int_Image, i, Loc_Grad_Image, s, thresh_grad);
-
+		
 		sym_local_gradient(Row_Int_Image, i, Sym_Loc_Grad_Image, s, thresh_sym_grad);
 		
+		
 	}
+
+	lane_width_filter(Loc_Grad_Image, Sm, SM, horizon);
+	lane_width_filter(Sym_Loc_Grad_Image, Sm, SM, horizon);
+
 
 	//Display TopHat Results
 	Mat tophat_binarized;
 	TopHat_Image.convertTo(TopHat_Image,CV_8UC1, 10);
-	double otsu_value = threshold(TopHat_Image, tophat_binarized, 12, 255, THRESH_BINARY + THRESH_OTSU );
-	//adaptiveThreshold(TopHat_Image, tophat_binarized, 255, ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 7, 15);
-	namedWindow( tophat_window, WINDOW_AUTOSIZE ); // Create a window to display results
+	threshold(TopHat_Image, tophat_binarized, 12, 255, THRESH_BINARY + THRESH_OTSU );
+	namedWindow(tophat_window, WINDOW_NORMAL); // Create a window to display results
+	resizeWindow(tophat_window, 512,  432);
 	imshow(tophat_window, tophat_binarized);
-	moveWindow(tophat_window, 10, 10);
+	moveWindow(tophat_window, 20, 100);
 	imwrite("tophat.jpg", tophat_binarized);
 
 	//Display Loc Gradient Results 
-	namedWindow( local_grad_window, WINDOW_AUTOSIZE ); // Create a window to display results
+	namedWindow(local_grad_window, WINDOW_NORMAL); // Create a window to display results
+	resizeWindow(local_grad_window, 512,  432);
 	imshow(local_grad_window, Loc_Grad_Image);
-	moveWindow(local_grad_window, 10, 10);
+	moveWindow(local_grad_window, 680, 100);
 	imwrite("loc_grad.jpg", Loc_Grad_Image);
 
 	//Display Loc Gradient Results 
-	namedWindow( sym_local_grad_window, WINDOW_AUTOSIZE ); // Create a window to display results
+	namedWindow(sym_local_grad_window, WINDOW_NORMAL); // Create a window to display results
+	resizeWindow(sym_local_grad_window, 512,  432);
 	imshow(sym_local_grad_window, Sym_Loc_Grad_Image);
-	moveWindow(sym_local_grad_window, 10, 10);
+	moveWindow(sym_local_grad_window, 1340, 100);
 	imwrite("sym_loc_grad.jpg", Sym_Loc_Grad_Image);
 
 	waitKey(0);
@@ -171,3 +179,94 @@ void sym_local_gradient(vector<double>& Row_Int_Image, int row_idx, Mat& Sym_Loc
 		}
 	}
 }
+
+void lane_width_filter(Mat& Image, vector<double>& Sm, vector<double>& SM, int horizon) {
+
+	// Init variables
+	Mat filtered_Image = Mat::zeros(Image.rows, Image.cols, CV_8UC1);
+
+	int in_region = 0; 
+	int pix_in_region = 0;	// # of pixels in connected region
+	int region_start = 0; // start idx connected region
+	int region_end = 0; // end idx connected region
+	uchar* img_ptr;
+	uchar* out_ptr;
+
+	for (int i = Image.rows - 1; i > horizon; --i) {
+		if (Sm[i] < 0) {
+			break;
+		}
+		img_ptr = Image.ptr<uchar>(i);
+		out_ptr = filtered_Image.ptr<uchar>(i);
+		in_region = 0;
+		pix_in_region = 0;
+
+		for (int j = 0; j < Image.cols; ++j) {
+			if (in_region) {
+				if (img_ptr[j] == 0) { // no longer in region
+					in_region = 0;
+					if (pix_in_region >= Sm[i] && pix_in_region <= SM[i]) { //paint region if fit
+						region_end = j;
+						for (int k = region_start; k <= region_end; ++k) {
+							out_ptr[k] = 255;
+						}
+						//cout << "painted a " << (int)out_ptr[region_end] << "\n"; 
+					}
+					pix_in_region = 0; // reset pix counter
+				}
+				else { //still in region
+					pix_in_region += 1;
+				}
+			}
+			else { //not in region
+				if (img_ptr[j] > 0) {
+					pix_in_region += 1;
+					region_start = j;
+					in_region = 1;
+				}
+			}
+		}		
+	}
+
+	// namedWindow(local_grad_window, WINDOW_NORMAL); // Create a window to display results
+	// resizeWindow(local_grad_window, 512,  432);
+	// imshow(local_grad_window, filtered_Image);
+	// moveWindow(local_grad_window, 680, 100);
+	// waitKey(0);
+	filtered_Image.copyTo(Image);
+}
+
+// function out = filter_by_RM_width(in, Sm, SM)
+
+// [lig, col, chn] = size(in);
+// out = zeros(lig, col);
+
+// for v = lig : -1 : 1
+//     if(Sm(v) < 0)
+//         break;
+//     end
+    
+//     allume = 0;
+//     count = 0;
+//     for u = 1 : col
+//         if(allume == 0)
+//             if(in(v,u) > 0)
+//                 count = count + 1;
+//                 allume = 1;
+//                 u_start = u;
+//             end
+//         else
+//             if(in(v,u) == 0)
+//                 allume = 0;
+//                 if(count >= Sm(v) && count <= SM(v));
+//                     u_end = u;
+//                     out(v,u_start:u_end) = 255;
+//                 end
+//                 count = 0;
+//             else
+//                 count = count + 1;
+//             end
+//         end
+//     end
+    
+// end
