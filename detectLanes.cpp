@@ -38,6 +38,7 @@ Mat src;
 string tophat_window = "Top Hat Filter";
 string local_grad_window = "Local Gradient";
 string sym_local_grad_window = "Symmetric Local Gradient";
+string combined_window = "Combined Filter";
 
 int main( int, char** argv )
 {
@@ -110,11 +111,24 @@ int main( int, char** argv )
 	lane_width_filter(Loc_Grad_Image, Sm, SM, horizon);
 	lane_width_filter(Sym_Loc_Grad_Image, Sm, SM, horizon);
 
-
-	//Display TopHat Results
+	// Binarize Tophat
 	Mat tophat_binarized;
 	TopHat_Image.convertTo(TopHat_Image,CV_8UC1, 10);
 	threshold(TopHat_Image, tophat_binarized, 12, 255, THRESH_BINARY + THRESH_OTSU );
+
+	//Combine Images
+	// vector<Mat> channels;
+	// channels
+	// div by 255 
+	uchar scalar = 255;
+	Mat Combined_Image = (Loc_Grad_Image / scalar).mul(tophat_binarized);
+	Combined_Image = Combined_Image.mul((Sym_Loc_Grad_Image / scalar));
+
+
+	//Display TopHat Results
+	// Mat tophat_binarized;
+	// TopHat_Image.convertTo(TopHat_Image,CV_8UC1, 10);
+	// threshold(TopHat_Image, tophat_binarized, 12, 255, THRESH_BINARY + THRESH_OTSU );
 	namedWindow(tophat_window, WINDOW_NORMAL); // Create a window to display results
 	resizeWindow(tophat_window, 512,  432);
 	imshow(tophat_window, tophat_binarized);
@@ -134,6 +148,13 @@ int main( int, char** argv )
 	imshow(sym_local_grad_window, Sym_Loc_Grad_Image);
 	moveWindow(sym_local_grad_window, 1340, 100);
 	imwrite("sym_loc_grad.jpg", Sym_Loc_Grad_Image);
+
+	//Display Combined Results 
+	namedWindow(combined_window, WINDOW_NORMAL); // Create a window to display results
+	resizeWindow(combined_window, 512,  432);
+	imshow(combined_window, Combined_Image);
+	moveWindow(combined_window, 680, 550);
+	imwrite("sym_loc_grad.jpg", Combined_Image);
 
 	waitKey(0);
 
